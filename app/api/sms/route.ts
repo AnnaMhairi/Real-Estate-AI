@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { sendSMS } from "../../lib/twilio";
+import { generateBotReply } from "../../lib/ai";
+
+const prisma = new PrismaClient();
+
+export async function POST(req: Request) {
+  const formData = await req.formData();
+  const from = formData.get("From") as string;
+  const body = formData.get("Body") as string;
+
+  // Check for STOP opt-out
+  if (body.trim().toUpperCase() === "STOP") {
+    await sendSMS(from, "You have been unsubscribed.");
+    return new NextResponse("Unsubscribed", { status: 200 });
+  }
+
+  // Find or create lead
+  let lead = await prisma.lead.findFirst({ where: { phone: from } });
+  if (!lead) {
+    lead = await prisma.lead.create({ data: { phone: from } });
+  }
+
+  // Save incoming message
+  await prisma.message.create({
+    data: { leadId: lead.id, sender: "lead", body },
+  });
+
+  // Generate AI reply
+  const reply = await generateBotReply(body, lead.status);
+
+  // Save bot message
+  await prisma.message.create({
+    data: { leadId: lead.id, sender: "bot", body: reply },
+  });
+
+  // Send SMS reply
+  await sendSMS(from, reply);
+
+  return new NextResponse("OK");
+}
+
+export async function GET() {
+  return new NextResponse("SMS endpoint is live", { status: 200 });
+}
