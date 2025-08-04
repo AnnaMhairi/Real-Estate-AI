@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/sms/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/anna/realestate-ai-minimal/":[],"/Users/anna/realestate-ai-minimal/app/api/sms/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}}

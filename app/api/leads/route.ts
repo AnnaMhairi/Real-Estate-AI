@@ -1,20 +1,25 @@
-import { NextResponse } from 'next/server';
-import { sendSMS } from '../../lib/twilio';
 import { db } from '../../lib/db';
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const { name, phone, property } = await req.json();
+  try {
+    const { name, phone, property } = await req.json();
 
-  // Save to DB
-  const lead = await db.lead.create({
-    data: { name, phone, property },
-  });
+    const lead = await db.lead.create({
+      data: { name, phone, property, status: 'pending' },
+    });
 
-  // Stubbed SMS (until Twilio is ready)
-  console.log(`Pretend sending SMS to ${phone}: Interested in ${property}?`);
+    // TODO: Replace with real Twilio send when ready
+    console.log(`Would send SMS to ${phone} about ${property}`);
 
-  // Uncomment when Twilio's good to go:
-  // await sendSMS(phone, `Hi ${name}, thanks for your interest in ${property}.`);
+    await db.lead.update({
+      where: { id: lead.id },
+      data: { status: 'sms_sent' },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Error creating lead:', err);
+    return NextResponse.json({ error: 'Failed to create lead' }, { status: 500 });
+  }
 }

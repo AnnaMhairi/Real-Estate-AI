@@ -1,31 +1,29 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Lead {
   id        String   @id @default(cuid())
+  name      String
   phone     String
-  name      String?
-  status    String   @default("new")
-  messages  Message[]
+  property  String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  messages Message[] @relation("LeadToMessage")
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  lead      Lead     @relation(fields: [leadId], references: [id])
+  id        String    @id @default(dbgenerated("gen_random_uuid()"))
   leadId    String
-  sender    String   // "lead" | "bot"
+  sender    String
   body      String
-  createdAt DateTime @default(now())
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+
+  lead Lead @relation("LeadToMessage", fields: [leadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lead")
 }
