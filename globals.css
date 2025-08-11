@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* design tokens */
+:root {
+  --bg: #0a0a0a;           /* page bg */
+  --card: #0f0f11;         /* surfaces */
+  --ink: #e6e6e6;          /* text */
+  --muted: #9ca3af;        /* secondary text */
+  --ring:  0 255 171;      /* neon emerald */
+  --accent: 16 185 129;    /* emerald-500 */
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* glass card + neon ring utility */
+.card {
+  @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl;
+}
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl border px-4 py-3 font-semibold transition;
+  border-color: rgba(var(--accent), .4);
+  background: rgba(var(--accent), .15);
+}
+.btn:hover { background: rgba(var(--accent), .25); }
+.input {
+  @apply w-full rounded-xl border border-white/10 bg-neutral-900/60 px-3 py-3 outline-none;
+}
+.input:focus { box-shadow: 0 0 0 2px rgba(var(--ring), .35); border-color: rgba(var(--ring), .5); }

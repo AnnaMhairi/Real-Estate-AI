@@ -27,3 +27,16 @@ model Message {
 
   lead Lead @relation("LeadToMessage", fields: [leadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lead")
 }
+
+model SmsSubscriber {
+  id            String   @id @default(cuid())
+  phoneE164     String   @unique
+  name          String?
+  source        String   // "web_form" | "keyword" | "admin_import"
+  status        String   // "pending" | "confirmed" | "stopped"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastConsentAt DateTime?
+  // simple audit
+  lastMessageAt DateTime?
+}

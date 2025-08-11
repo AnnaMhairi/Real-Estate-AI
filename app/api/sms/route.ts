@@ -5,17 +5,34 @@ import { generateBotReply } from "../../lib/ai";
 
 const prisma = new PrismaClient();
 
-export async function POST(req: Request) {
-  const formData = await req.formData();
-  const from = formData.get("From") as string;
-  const body = formData.get("Body") as string;
+function norm(s?: string) {
+  return (s || "").trim().toUpperCase();
+}
 
-  // Check for STOP opt-out
-  if (body.trim().toUpperCase() === "STOP") {
-    await sendSMS(from, "You have been unsubscribed.");
-    return new NextResponse("Unsubscribed", { status: 200 });
+export async function POST(req: Request) {
+  const formData = await req.formData(); // Twilio posts x-www-form-urlencoded
+  const from = String(formData.get("From") || "");
+  const body = String(formData.get("Body") || "");
+  const word = norm(body);
+
+  // --- Compliance keywords ---
+  if (["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"].includes(word)) {
+    await sendSMS(from, "You have been unsubscribed. Reply HELP for help.");
+    return new NextResponse("OK", { status: 200 });
   }
 
+  if (word === "HELP") {
+    await sendSMS(from, "Help: Reply STOP to cancel. Visit https://yourdomain.com/help");
+    return new NextResponse("OK", { status: 200 });
+  }
+
+  // --- Double opt-in confirmation ---
+  if (["YES", "Y"].includes(word)) {
+    await sendSMS(from, "You’re in! Expect up to 4 msgs/mo. Reply STOP to cancel, HELP for help.");
+    return new NextResponse("OK", { status: 200 });
+  }
+
+  // --- Your existing bot flow ---
   // Find or create lead
   let lead = await prisma.lead.findFirst({ where: { phone: from } });
   if (!lead) {
@@ -38,7 +55,7 @@ export async function POST(req: Request) {
   // Send SMS reply
   await sendSMS(from, reply);
 
-  return new NextResponse("OK");
+  return new NextResponse("OK", { status: 200 });
 }
 
 export async function GET() {
